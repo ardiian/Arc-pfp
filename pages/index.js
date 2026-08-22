@@ -16,10 +16,18 @@ const COUNTRIES = [
   ["Other", "UN"],
 ];
 
+function flagEmoji(code) {
+  if (code === "UN") return "🏳️";
+  return code
+    .toUpperCase()
+    .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
-  photoBox: { x: 1411, y: 95, w: 271, h: 217 },
+  photoBox: { x: 1401, y: 68, w: 290, h: 248 },
+  flagBox: { x: 1382, y: 333, w: 40, h: 27, color: "#3c254d" },
   nameLine: { x: 1445, y: 366, size: 26, coverY: 338, coverH: 34, color: "#34204c" },
   cityLine: { x: 1445, y: 400, size: 20, coverY: 380, coverH: 26, color: "#3f214e" },
   countryLine: { x: 1445, y: 433, size: 20, coverY: 411, coverH: 28, color: "#795a7f" },
@@ -73,6 +81,14 @@ export default function Home() {
       ctx.drawImage(photoImg, dx, dy, dw, dh);
       ctx.restore();
     }
+
+    // Cover baked-in flag icon, then draw the flag matching selected country
+    const fb = LAYOUT.flagBox;
+    ctx.fillStyle = fb.color;
+    ctx.fillRect(fb.x, fb.y, fb.w, fb.h);
+    ctx.font = "24px sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.fillText(flagEmoji(countryCode), fb.x + 2, fb.y + fb.h / 2 + 2);
 
     function coverAndWrite(line, text, bold) {
       ctx.fillStyle = line.color;
