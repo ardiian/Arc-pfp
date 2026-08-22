@@ -19,7 +19,7 @@ const COUNTRIES = [
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
-  photoBox: { x: 1403, y: 87, w: 287, h: 233 },
+  photoBox: { x: 1411, y: 95, w: 271, h: 217 },
   nameLine: { x: 1445, y: 366, size: 26, coverY: 338, coverH: 34, color: "#34204c" },
   cityLine: { x: 1445, y: 400, size: 20, coverY: 380, coverH: 26, color: "#3f214e" },
   countryLine: { x: 1445, y: 433, size: 20, coverY: 411, coverH: 28, color: "#795a7f" },
