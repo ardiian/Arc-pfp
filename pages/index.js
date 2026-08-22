@@ -26,16 +26,16 @@ function flagEmoji(code) {
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
-  photoBox: { x: 1408, y: 58, w: 244, h: 262 },
-  nameLine: { x: 1450, y: 363, size: 27 },
-  cityLine: { x: 1450, y: 400, size: 22 },
-  countryLine: { x: 1450, y: 432, size: 22 },
-  flag: { x: 1382, y: 340, size: 30 },
+  photoBox: { x: 1403, y: 87, w: 287, h: 233 },
+  nameLine: { x: 1440, y: 352, size: 26, coverY: 328, coverH: 34 },
+  cityLine: { x: 1440, y: 393, size: 20, coverY: 375, coverH: 26 },
+  countryLine: { x: 1440, y: 427, size: 20, coverY: 409, coverH: 26 },
+  coverX: 1400,
+  coverW: 300,
 };
 
 export default function Home() {
   const canvasRef = useRef(null);
-  const fileInputRef = useRef(null);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [countryCode, setCountryCode] = useState("ID");
@@ -66,6 +66,7 @@ export default function Home() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(templateImg, 0, 0, LAYOUT.canvasW, LAYOUT.canvasH);
 
+    // Photo (cover-fit into box)
     if (photoImg) {
       const { x, y, w, h } = LAYOUT.photoBox;
       ctx.save();
@@ -81,31 +82,21 @@ export default function Home() {
       ctx.restore();
     }
 
-    ctx.font = `${LAYOUT.flag.size}px sans-serif`;
-    ctx.textBaseline = "middle";
-    ctx.fillText(flagEmoji(countryCode), LAYOUT.flag.x, LAYOUT.flag.y);
+    // Cover the original placeholder text with a blended rectangle, then write fresh text
+    function coverAndWrite(line, text, bold) {
+      ctx.fillStyle = "rgba(35,20,55,0.92)";
+      ctx.fillRect(LAYOUT.coverX, line.coverY, LAYOUT.coverW, line.coverH);
+      ctx.fillStyle = "#f2e2c4";
+      ctx.font = `${bold ? "bold " : ""}${line.size}px Georgia, serif`;
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(text, line.x, line.y);
+    }
 
-    ctx.fillStyle = "#f2e2c4";
-    ctx.textBaseline = "alphabetic";
-
-    ctx.font = `bold ${LAYOUT.nameLine.size}px Georgia, serif`;
-    ctx.fillText(
-      (name || "YOUR NAME HERE").toUpperCase(),
-      LAYOUT.nameLine.x,
-      LAYOUT.nameLine.y
-    );
-
-    ctx.font = `${LAYOUT.cityLine.size}px Georgia, serif`;
-    ctx.fillText(
-      (city || "YOUR CHAPTER / CITY").toUpperCase(),
-      LAYOUT.cityLine.x,
-      LAYOUT.cityLine.y
-    );
-
+    coverAndWrite(LAYOUT.nameLine, (name || "YOUR NAME HERE").toUpperCase(), true);
+    coverAndWrite(LAYOUT.cityLine, (city || "YOUR CHAPTER / CITY").toUpperCase(), false);
     const countryName =
       COUNTRIES.find((c) => c[1] === countryCode)?.[0] || "YOUR COUNTRY / REGION";
-    ctx.font = `${LAYOUT.countryLine.size}px Georgia, serif`;
-    ctx.fillText(countryName.toUpperCase(), LAYOUT.countryLine.x, LAYOUT.countryLine.y);
+    coverAndWrite(LAYOUT.countryLine, countryName.toUpperCase(), false);
   }
 
   function handlePhotoUpload(e) {
@@ -144,7 +135,6 @@ export default function Home() {
           <label style={styles.label}>
             Foto Profil
             <input
-              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handlePhotoUpload}
