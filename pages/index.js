@@ -16,22 +16,15 @@ const COUNTRIES = [
   ["Other", "UN"],
 ];
 
-function flagEmoji(code) {
-  if (code === "UN") return "🏳️";
-  return code
-    .toUpperCase()
-    .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
-}
-
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
   photoBox: { x: 1403, y: 87, w: 287, h: 233 },
-  nameLine: { x: 1440, y: 352, size: 26, coverY: 328, coverH: 34 },
-  cityLine: { x: 1440, y: 393, size: 20, coverY: 375, coverH: 26 },
-  countryLine: { x: 1440, y: 427, size: 20, coverY: 409, coverH: 26 },
-  coverX: 1400,
-  coverW: 300,
+  nameLine: { x: 1445, y: 366, size: 26, coverY: 338, coverH: 34, color: "#34204c" },
+  cityLine: { x: 1445, y: 400, size: 20, coverY: 380, coverH: 26, color: "#3f214e" },
+  countryLine: { x: 1445, y: 433, size: 20, coverY: 411, coverH: 28, color: "#795a7f" },
+  coverX: 1424,
+  coverW: 268,
 };
 
 export default function Home() {
@@ -66,7 +59,6 @@ export default function Home() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(templateImg, 0, 0, LAYOUT.canvasW, LAYOUT.canvasH);
 
-    // Photo (cover-fit into box)
     if (photoImg) {
       const { x, y, w, h } = LAYOUT.photoBox;
       ctx.save();
@@ -82,9 +74,8 @@ export default function Home() {
       ctx.restore();
     }
 
-    // Cover the original placeholder text with a blended rectangle, then write fresh text
     function coverAndWrite(line, text, bold) {
-      ctx.fillStyle = "rgba(35,20,55,0.92)";
+      ctx.fillStyle = line.color;
       ctx.fillRect(LAYOUT.coverX, line.coverY, LAYOUT.coverW, line.coverH);
       ctx.fillStyle = "#f2e2c4";
       ctx.font = `${bold ? "bold " : ""}${line.size}px Georgia, serif`;
