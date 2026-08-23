@@ -26,9 +26,9 @@ function flagEmoji(code) {
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
-  photoBox: { x: 1364, y: 46, w: 268, h: 266 },
+  photoBox: { x: 1374, y: 56, w: 244, h: 242 },
   flagBox: { x: 1358, y: 328, w: 40, h: 27, color: "#2b2540" },
-  nameLine: { x: 1420, y: 360, size: 30, coverX: 1418, coverY: 332, coverW: 280, coverH: 34, color: "#2b2540" },
+  nameLine: { x: 1404, y: 360, size: 30, coverX: 1402, coverY: 332, coverW: 296, coverH: 34, color: "#2b2540" },
   cityLine: { x: 1420, y: 400, size: 22, coverX: 1420, coverY: 382, coverW: 240, coverH: 24, color: "#332a4a" },
   countryLine: { x: 1420, y: 432, size: 22, coverX: 1420, coverY: 414, coverW: 240, coverH: 24, color: "#4a3a5a" },
 };
