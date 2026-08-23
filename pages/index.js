@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+    import { useEffect, useRef, useState } from "react";
 
 const COUNTRIES = [
   ["Indonesia", "ID"], ["United States", "US"], ["United Kingdom", "GB"],
@@ -26,7 +26,7 @@ function flagEmoji(code) {
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
-  photoBox: { x: 1361, y: 43, w: 274, h: 270 },
+  photoBox: { x: 1366, y: 48, w: 264, h: 260 },
   flagBox: { x: 1358, y: 328, w: 40, h: 27, color: "#2b2540" },
   nameLine: { x: 1420, y: 360, size: 30, coverX: 1418, coverY: 332, coverW: 280, coverH: 34, color: "#2b2540" },
   cityLine: { x: 1420, y: 400, size: 22, coverX: 1420, coverY: 382, coverW: 240, coverH: 24, color: "#332a4a" },
@@ -243,4 +243,4 @@ const styles = {
     fontSize: 15,
     cursor: "pointer",
   },
-};
+};    
