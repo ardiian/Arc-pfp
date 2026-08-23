@@ -26,7 +26,7 @@ function flagEmoji(code) {
 const LAYOUT = {
   canvasW: 1824,
   canvasH: 592,
-  photoBox: { x: 1362, y: 46, w: 256, h: 268 },
+  photoBox: { x: 1361, y: 43, w: 274, h: 270 },
   flagBox: { x: 1358, y: 328, w: 40, h: 27, color: "#2b2540" },
   nameLine: { x: 1420, y: 360, size: 30, coverX: 1418, coverY: 332, coverW: 280, coverH: 34, color: "#2b2540" },
   cityLine: { x: 1420, y: 400, size: 22, coverX: 1420, coverY: 382, coverW: 240, coverH: 24, color: "#332a4a" },
@@ -100,4 +100,147 @@ export default function Home() {
     coverAndWrite(LAYOUT.cityLine, (city || "YOUR CHAPTER / CITY").toUpperCase(), false);
     const countryName =
       COUNTRIES.find((c) => c[1] === countryCode)?.[0] || "YOUR COUNTRY / REGION";
-    coverAndWrite(LAYOUT.countryLine, countryName.toUpp
+    coverAndWrite(LAYOUT.countryLine, countryName.toUpperCase(), false);
+  }
+
+  function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new window.Image();
+      img.onload = () => setPhotoImg(img);
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleDownload() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = `arc-pfp-${(name || "member").replace(/\s+/g, "-").toLowerCase()}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <h1 style={styles.h1}>Arc Community Banner Maker</h1>
+        <p style={styles.sub}>Isi nama, foto, kota/chapter, dan negara — lalu unduh PNG.</p>
+
+        <div style={styles.previewWrap}>
+          {!ready && <div style={styles.loading}>Memuat template…</div>}
+          <canvas ref={canvasRef} style={styles.canvas} />
+        </div>
+
+        <div style={styles.form}>
+          <label style={styles.label}>
+            Foto Profil
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              style={styles.input}
+            />
+          </label>
+
+          <label style={styles.label}>
+            Nama
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nama kamu"
+              style={styles.input}
+              maxLength={30}
+            />
+          </label>
+
+          <label style={styles.label}>
+            Chapter / Kota
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="cth: Jakarta Chapter"
+              style={styles.input}
+              maxLength={30}
+            />
+          </label>
+
+          <label style={styles.label}>
+            Negara / Region
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              style={styles.input}
+            >
+              {COUNTRIES.map(([n, code]) => (
+                <option key={code} value={code}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button style={styles.button} onClick={handleDownload} disabled={!ready}>
+            Unduh PNG
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "#0f0b1e",
+    color: "#f2e2c4",
+    fontFamily: "system-ui, sans-serif",
+    padding: "24px 16px 60px",
+  },
+  container: { maxWidth: 960, margin: "0 auto" },
+  h1: { fontSize: 24, marginBottom: 4 },
+  sub: { opacity: 0.75, marginBottom: 20, fontSize: 14 },
+  previewWrap: {
+    width: "100%",
+    overflowX: "auto",
+    background: "#000",
+    borderRadius: 12,
+    marginBottom: 24,
+    position: "relative",
+  },
+  loading: { padding: 20, fontSize: 14 },
+  canvas: { width: "100%", display: "block", borderRadius: 12 },
+  form: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: 14,
+    background: "rgba(255,255,255,0.04)",
+    padding: 20,
+    borderRadius: 12,
+  },
+  label: { display: "flex", flexDirection: "column", gap: 6, fontSize: 13 },
+  input: {
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.15)",
+    background: "#1b1530",
+    color: "#f2e2c4",
+    fontSize: 15,
+  },
+  button: {
+    marginTop: 8,
+    padding: "12px 20px",
+    borderRadius: 8,
+    border: "none",
+    background: "linear-gradient(90deg,#7c5cff,#c8a6ff)",
+    color: "#1b0f33",
+    fontWeight: 700,
+    fontSize: 15,
+    cursor: "pointer",
+  },
+};
