@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+  import { useEffect, useRef, useState } from "react";
 
 const COUNTRIES = [
   ["Indonesia", "ID"], ["United States", "US"], ["United Kingdom", "GB"],
@@ -78,6 +78,10 @@ export default function Home() {
       const dy = y + (h - dh) / 2;
       ctx.drawImage(photoImg, dx, dy, dw, dh);
       ctx.restore();
+
+      ctx.strokeStyle = "#d4b483";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, w, h);
     }
 
     const fb = LAYOUT.flagBox;
