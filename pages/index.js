@@ -1,920 +1,513 @@
-"use client";
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arc — Kartu Anggota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#120b22;
+    --bg-mid:#1e1438;
+    --bg-panel:#1a1330;
+    --gold:#c9a35c;
+    --gold-dim:#8a744a;
+    --copper:#b5793f;
+    --cream:#f2ead9;
+    --cream-dim:#a89ecb;
+    --line:#3a2e5c;
+    --red:#d9484a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #2a1d4d 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 110%, #241a42 0%, transparent 55%),
+      var(--bg-deep);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .constellation{
+    position:fixed; inset:0; z-index:0; opacity:.35; pointer-events:none;
+  }
+  .wrap{
+    position:relative; z-index:1;
+    max-width:1320px; margin:0 auto; padding:48px 28px 80px;
+  }
+  header{
+    display:flex; align-items:center; gap:14px; margin-bottom:6px;
+  }
+  .mark{
+    width:38px; height:38px; position:relative; flex-shrink:0;
+  }
+  .mark svg{width:100%; height:100%; display:block;}
+  .wordmark{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:700; font-size:30px; letter-spacing:.02em;
+    color:var(--cream);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--gold-dim); margin:22px 0 6px;
+  }
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600; font-size:clamp(30px,4vw,44px);
+    line-height:1.05; color:var(--cream); max-width:640px;
+  }
+  .sub{
+    color:var(--cream-dim); font-size:15px; margin-top:12px; max-width:520px; line-height:1.55;
+  }
+  .grid{
+    display:grid; grid-template-columns:minmax(300px,380px) 1fr;
+    gap:40px; margin-top:48px; align-items:start;
+  }
+  @media (max-width:880px){ .grid{grid-template-columns:1fr;} }
 
-import { useEffect, useRef, useState } from "react";
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px;
+  }
+  .field{ margin-bottom:20px; }
+  .field label{
+    display:block; font-family:'JetBrains Mono',monospace; font-size:11px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--cream-dim); margin-bottom:8px;
+  }
+  .field input[type=text], .field select{
+    width:100%; background:var(--bg-mid); border:1px solid var(--line);
+    color:var(--cream); font-family:'Inter',sans-serif; font-size:14.5px;
+    padding:11px 13px; border-radius:8px; outline:none;
+    transition:border-color .15s;
+  }
+  .field input[type=text]:focus, .field select:focus{ border-color:var(--gold); }
+  .field select{ appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0 L5 6 L10 0' fill='none' stroke='%23c9a35c' stroke-width='1.4'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center;
+  }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
-const COUNTRIES = [
-  ["Indonesia", "ID"],
-  ["United States", "US"],
-  ["United Kingdom", "GB"],
-  ["Canada", "CA"],
-  ["Mexico", "MX"],
-  ["Brazil", "BR"],
-  ["Argentina", "AR"],
-  ["Germany", "DE"],
-  ["France", "FR"],
-  ["Spain", "ES"],
-  ["Italy", "IT"],
-  ["Netherlands", "NL"],
-  ["Portugal", "PT"],
-  ["Poland", "PL"],
-  ["Ukraine", "UA"],
-  ["Nigeria", "NG"],
-  ["South Africa", "ZA"],
-  ["Egypt", "EG"],
-  ["Kenya", "KE"],
-  ["Morocco", "MA"],
-  ["Saudi Arabia", "SA"],
-  ["United Arab Emirates", "AE"],
-  ["Turkey", "TR"],
-  ["India", "IN"],
-  ["Pakistan", "PK"],
-  ["Bangladesh", "BD"],
-  ["Sri Lanka", "LK"],
-  ["Philippines", "PH"],
-  ["Vietnam", "VN"],
-  ["Thailand", "TH"],
-  ["Malaysia", "MY"],
-  ["Singapore", "SG"],
-  ["Japan", "JP"],
-  ["South Korea", "KR"],
-  ["China", "CN"],
-  ["Taiwan", "TW"],
-  ["Hong Kong", "HK"],
-  ["Australia", "AU"],
-  ["New Zealand", "NZ"],
-  ["Russia", "RU"],
-  ["Sweden", "SE"],
-  ["Norway", "NO"],
-  ["Switzerland", "CH"],
-  ["Colombia", "CO"],
-  ["Chile", "CL"],
-  ["Peru", "PE"],
-  ["Venezuela", "VE"],
-  ["Other", "UN"],
-];
+  .photo-drop{
+    border:1.5px dashed var(--line); border-radius:10px; padding:18px;
+    text-align:center; cursor:pointer; color:var(--cream-dim); font-size:13px;
+    transition:border-color .15s, background .15s; position:relative;
+  }
+  .photo-drop:hover{ border-color:var(--gold); background:rgba(201,163,92,.04); }
+  .photo-drop input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .photo-drop.has-img{ padding:0; border-style:solid; }
+  .photo-drop.has-img img{ width:100%; height:120px; object-fit:cover; border-radius:9px; display:block; }
 
-function flagEmoji(code) {
-  if (code === "UN") return "🏳️";
+  .btn{
+    width:100%; padding:14px; border-radius:9px; border:none; cursor:pointer;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:14.5px; letter-spacing:.01em;
+    background:linear-gradient(135deg, var(--gold), var(--copper));
+    color:#1a1330; margin-top:6px;
+    transition:filter .15s, transform .1s;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:scale(.99); }
+  .btn.secondary{
+    background:transparent; border:1px solid var(--gold-dim); color:var(--gold);
+    margin-top:10px;
+  }
 
-  return code
-    .toUpperCase()
-    .replace(/./g, (char) =>
-      String.fromCodePoint(127397 + char.charCodeAt(0))
-    );
+  .preview-stage{
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+  }
+  #cardCanvas{
+    width:100%; max-width:920px; height:auto; border-radius:16px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.65), 0 0 0 1px var(--line);
+  }
+  .hint{ color:var(--cream-dim); font-size:12.5px; text-align:center; max-width:480px; }
+
+  footer{ margin-top:70px; text-align:center; color:var(--gold-dim); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.15em; }
+</style>
+</head>
+<body>
+
+<canvas class="constellation" id="bgCanvas"></canvas>
+
+<div class="wrap">
+  <header>
+    <div class="mark">
+      <svg viewBox="0 0 100 100"><path d="M50 10 L88 90 L68 90 L50 50 L32 90 L12 90 Z" fill="none" stroke="url(#g)" stroke-width="7" stroke-linejoin="round"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a35c"/><stop offset="1" stop-color="#7a5fd4"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="wordmark">Arc</div>
+  </header>
+
+  <div class="eyebrow">Chapter Membership</div>
+  <h1>Buat kartu pengenal anggotamu.</h1>
+  <p class="sub">Isi data di bawah, kartu akan ter-render otomatis di sisi kanan. Unduh sebagai PNG untuk dipakai sebagai foto profil atau dibagikan ke chapter-mu.</p>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="field">
+        <label>Nama Anggota</label>
+        <input type="text" id="fName" placeholder="Chimil" maxlength="26">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Kota</label>
+          <input type="text" id="fCity" placeholder="Jakarta" maxlength="20">
+        </div>
+        <div class="field">
+          <label>Negara</label>
+          <input type="text" id="fCountry" placeholder="Indonesia" maxlength="20">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Chapter Wilayah</label>
+        <select id="fChapter">
+          <option>North America</option>
+          <option>Latin America</option>
+          <option>Europe</option>
+          <option>Africa</option>
+          <option>Middle East</option>
+          <option selected>South Asia</option>
+          <option>Southeast Asia</option>
+          <option>East Asia</option>
+          <option>Oceania</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Kode Bendera (ISO-2, opsional)</label>
+        <input type="text" id="fFlag" placeholder="ID" maxlength="2" style="text-transform:uppercase">
+      </div>
+
+      <div class="field">
+        <label>Foto (opsional)</label>
+        <div class="photo-drop" id="photoDrop">
+          <span id="photoDropText">Klik atau tarik foto ke sini</span>
+          <input type="file" id="fPhoto" accept="image/*">
+        </div>
+      </div>
+
+      <button class="btn" id="downloadBtn">Unduh Kartu (PNG)</button>
+      <button class="btn secondary" id="resetPhotoBtn">Hapus Foto</button>
+    </div>
+
+    <div class="preview-stage">
+      <canvas id="cardCanvas" width="1600" height="600"></canvas>
+      <p class="hint">Pratinjau diperbarui otomatis. Kanvas dirender di browser — tidak ada data yang dikirim ke server.</p>
+    </div>
+  </div>
+
+  <footer>ARC · GLOBAL BUILDERS · LOCAL CHAPTERS</footer>
+</div>
+
+<script>
+/* ---------- ambient constellation background ---------- */
+const bg = document.getElementById('bgCanvas');
+const bctx = bg.getContext('2d');
+function sizeBg(){ bg.width = innerWidth; bg.height = innerHeight; }
+sizeBg(); addEventListener('resize', sizeBg);
+const nodes = Array.from({length:70}, () => ({
+  x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+  vx:(Math.random()-.5)*.15, vy:(Math.random()-.5)*.15
+}));
+function drawBg(){
+  bctx.clearRect(0,0,bg.width,bg.height);
+  bctx.fillStyle = '#c9a35c';
+  for(const n of nodes){
+    n.x += n.vx; n.y += n.vy;
+    if(n.x<0||n.x>bg.width) n.vx*=-1;
+    if(n.y<0||n.y>bg.height) n.vy*=-1;
+  }
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+      const d = Math.hypot(dx,dy);
+      if(d<130){
+        bctx.strokeStyle = `rgba(201,163,92,${(1-d/130)*.35})`;
+        bctx.lineWidth=1;
+        bctx.beginPath(); bctx.moveTo(nodes[i].x,nodes[i].y); bctx.lineTo(nodes[j].x,nodes[j].y); bctx.stroke();
+      }
+    }
+  }
+  for(const n of nodes){ bctx.beginPath(); bctx.arc(n.x,n.y,1.4,0,7); bctx.fill(); }
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+/* ---------- card canvas ---------- */
+const canvas = document.getElementById('cardCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+let photoImg = null;
+
+function flagEmoji(cc){
+  if(!cc || cc.length!==2) return null;
+  const A = 0x1F1E6;
+  const cps = [...cc.toUpperCase()].map(c => A + (c.charCodeAt(0)-65));
+  if(cps.some(cp=>cp<A||cp>A+25)) return null;
+  return String.fromCodePoint(...cps);
 }
 
-/*
-  Template asli kamu:
-  1824 x 592
+function wrapInitials(name){
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return 'A';
+  return (parts[0][0] + (parts[1]?parts[1][0]:'')).toUpperCase();
+}
 
-  Semua koordinat di bawah menggunakan ukuran tersebut.
-  Jadi kalau template berubah ukuran, canvas tetap menyesuaikan.
-*/
+function drawCard(){
+  const name = document.getElementById('fName').value.trim() || 'Nama Anggota';
+  const city = document.getElementById('fCity').value.trim();
+  const country = document.getElementById('fCountry').value.trim();
+  const chapter = document.getElementById('fChapter').value;
+  const flagCode = document.getElementById('fFlag').value.trim();
 
-const BASE_W = 1824;
-const BASE_H = 592;
+  // background
+  const bgGrad = ctx.createLinearGradient(0,0,W,H);
+  bgGrad.addColorStop(0,'#150e28');
+  bgGrad.addColorStop(.55,'#1e1438');
+  bgGrad.addColorStop(1,'#241a42');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0,0,W,H);
 
-const LAYOUT = {
-  photo: {
-    x: 1388,
-    y: 60,
-    w: 220,
-    h: 218,
-  },
+  // radial glow
+  const glow = ctx.createRadialGradient(W*0.72,H*0.35,20,W*0.72,H*0.35,600);
+  glow.addColorStop(0,'rgba(122,95,212,.28)');
+  glow.addColorStop(1,'rgba(122,95,212,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
 
-  // Area informasi kanan
-  info: {
-    x: 1350,
-    width: 350,
-  },
-
-  flag: {
-    x: 1358,
-    y: 328,
-    size: 32,
-  },
-
-  name: {
-    x: 1405,
-    y: 359,
-    maxWidth: 285,
-    fontSize: 30,
-  },
-
-  city: {
-    x: 1420,
-    y: 400,
-    maxWidth: 250,
-    fontSize: 21,
-  },
-
-  country: {
-    x: 1420,
-    y: 432,
-    maxWidth: 250,
-    fontSize: 21,
-  },
-};
-
-export default function Home() {
-  const canvasRef = useRef(null);
-
-  const [name, setName] = useState("");
-  const [city, setCity] = useState("");
-  const [countryCode, setCountryCode] = useState("ID");
-
-  const [photoImg, setPhotoImg] = useState(null);
-  const [templateImg, setTemplateImg] = useState(null);
-  const [ready, setReady] = useState(false);
-
-  const countryName =
-    COUNTRIES.find((item) => item[1] === countryCode)?.[0] || "Other";
-
-  /*
-   * Load template
-   */
-  useEffect(() => {
-    const img = new window.Image();
-
-    img.onload = () => {
-      setTemplateImg(img);
-      setReady(true);
-    };
-
-    img.onerror = () => {
-      console.error("Template banner-template.png tidak ditemukan.");
-    };
-
-    img.src = "/banner-template.png";
-  }, []);
-
-  /*
-   * Redraw canvas setiap ada perubahan
-   */
-  useEffect(() => {
-    drawBanner();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, city, countryCode, photoImg, templateImg]);
-
-  /*
-   * Utility: text uppercase + clean
-   */
-  function cleanText(text) {
-    return text.trim().replace(/\s+/g, " ");
-  }
-
-  /*
-   * Utility:
-   * Mengecilkan font jika teks terlalu panjang.
-   */
-  function fitFont(ctx, text, maxWidth, startSize, minSize = 12) {
-    let size = startSize;
-
-    while (size > minSize) {
-      ctx.font = `bold ${size}px Georgia, serif`;
-
-      if (ctx.measureText(text).width <= maxWidth) {
-        break;
-      }
-
-      size -= 1;
+  // constellation network (static, seeded)
+  ctx.save();
+  ctx.globalAlpha = .5;
+  const pts = [];
+  let seed = 42;
+  function rnd(){ seed = (seed*9301+49297)%233280; return seed/233280; }
+  for(let i=0;i<46;i++) pts.push({x: rnd()*W, y: rnd()*H*0.7});
+  ctx.strokeStyle = 'rgba(201,163,92,.22)';
+  ctx.lineWidth = 1;
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const d = Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y);
+      if(d<140){ ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.stroke(); }
     }
-
-    return size;
   }
+  ctx.fillStyle = 'rgba(242,234,217,.7)';
+  for(const p of pts){ ctx.beginPath(); ctx.arc(p.x,p.y,1.6,0,7); ctx.fill(); }
+  ctx.restore();
 
-  /*
-   * Utility:
-   * Menggambar foto dengan crop cover.
-   */
-  function drawCoverImage(ctx, image, x, y, width, height) {
-    const imageRatio = image.width / image.height;
-    const boxRatio = width / height;
+  // top rule + eyebrow
+  ctx.strokeStyle = 'rgba(201,163,92,.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,44); ctx.lineTo(W,44); ctx.stroke();
+  ctx.fillStyle = '#8a744a';
+  ctx.font = '500 15px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('ARCHITECTS  ·  BUILDERS  ·  COMMUNITY  ·  IMPACT', W/2, 28);
 
-    let drawWidth;
-    let drawHeight;
+  // left: logo + wordmark
+  ctx.save();
+  ctx.translate(60,90);
+  const lg = ctx.createLinearGradient(0,0,60,60);
+  lg.addColorStop(0,'#c9a35c'); lg.addColorStop(1,'#7a5fd4');
+  ctx.strokeStyle = lg; ctx.lineWidth = 7; ctx.lineJoin='round';
+  ctx.beginPath();
+  ctx.moveTo(30,4); ctx.lineTo(56,58); ctx.lineTo(42,58); ctx.lineTo(30,32); ctx.lineTo(18,58); ctx.lineTo(4,58); ctx.closePath();
+  ctx.stroke();
+  ctx.fillStyle = '#f2ead9';
+  ctx.font = '700 34px "Cormorant Garamond", serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Arc', 72, 42);
+  ctx.restore();
 
-    if (imageRatio > boxRatio) {
-      drawHeight = height;
-      drawWidth = height * imageRatio;
-    } else {
-      drawWidth = width;
-      drawHeight = width / imageRatio;
-    }
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#f2ead9';
+  ctx.font = '600 52px "Cormorant Garamond", serif';
+  wrapText('BUILDING', 60, 210, 46);
+  ctx.save();
+  const goldFill = ctx.createLinearGradient(60,0,420,0);
+  goldFill.addColorStop(0,'#e9c583'); goldFill.addColorStop(1,'#b5793f');
+  ctx.fillStyle = goldFill;
+  ctx.fillText('THE FUTURE', 60, 262);
+  ctx.restore();
+  ctx.fillStyle = '#f2ead9';
+  ctx.fillText('TOGETHER', 60, 314);
 
-    const drawX = x + (width - drawWidth) / 2;
-    const drawY = y + (height - drawHeight) / 2;
+  ctx.font = '400 16px "Inter", sans-serif';
+  ctx.fillStyle = '#a89ecb';
+  ctx.fillText('Global Builders, Local Chapters.', 60, 366);
+  ctx.fillText('One Architecture. ' , 60, 390);
+  ctx.fillStyle = '#c9a35c';
+  const w1 = ctx.measureText('One Architecture. ').width;
+  ctx.fillText('One Future.', 60+w1, 390);
 
-    ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+  function wrapText(t,x,y){ ctx.fillText(t,x,y); }
+
+  // divider between hero copy and card
+  ctx.strokeStyle = 'rgba(201,163,92,.25)';
+  ctx.beginPath(); ctx.moveTo(0,H-84); ctx.lineTo(W,H-84); ctx.stroke();
+
+  // chapter strip bottom-left
+  ctx.fillStyle = '#a89ecb';
+  ctx.font = '500 13px "JetBrains Mono", monospace';
+  ctx.fillText('CHAPTERS AROUND THE WORLD', 60, H-42);
+  ctx.fillStyle = '#c9a35c';
+  ctx.font = '600 14px "Inter", sans-serif';
+  ctx.fillText(chapter.toUpperCase(), 60, H-18);
+
+  /* ---- member card, right side ---- */
+  const cardX = W-560, cardY = 74, cardW = 500, cardH = H-84-cardY-24;
+  ctx.save();
+  roundRect(cardX, cardY, cardW, cardH, 16);
+  const cardGrad = ctx.createLinearGradient(cardX,cardY,cardX,cardY+cardH);
+  cardGrad.addColorStop(0,'rgba(255,255,255,.06)');
+  cardGrad.addColorStop(1,'rgba(255,255,255,.015)');
+  ctx.fillStyle = cardGrad; ctx.fill();
+  ctx.strokeStyle = 'rgba(201,163,92,.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+  // corner accent
+  ctx.strokeStyle = '#c9a35c'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cardX, cardY+30); ctx.lineTo(cardX, cardY); ctx.lineTo(cardX+30, cardY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cardX+cardW-30, cardY+cardH); ctx.lineTo(cardX+cardW, cardY+cardH); ctx.lineTo(cardX+cardW, cardY+cardH-30); ctx.stroke();
+  ctx.restore();
+
+  // photo / avatar circle
+  const avR = 74, avCX = cardX+40+avR, avCY = cardY+40+avR;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(avCX,avCY,avR,0,7); ctx.closePath();
+  ctx.strokeStyle = '#c9a35c'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.clip();
+  if(photoImg){
+    drawImageCover(photoImg, avCX-avR, avCY-avR, avR*2, avR*2);
+  } else {
+    ctx.fillStyle = '#2a1d4d'; ctx.fillRect(avCX-avR,avCY-avR,avR*2,avR*2);
+    ctx.fillStyle = '#c9a35c';
+    ctx.font = '600 46px "Cormorant Garamond", serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(wrapInitials(name), avCX, avCY+4);
+    ctx.textBaseline='alphabetic';
   }
+  ctx.restore();
 
-  /*
-   * Utility:
-   * Rounded rectangle.
-   */
-  function roundedRect(ctx, x, y, width, height, radius) {
-    const r = Math.min(radius, width / 2, height / 2);
+  // name + location beside avatar
+  ctx.textAlign = 'left';
+  const flag = flagEmoji(flagCode);
+  let nameX = avCX+avR+30, nameY = cardY+58;
+  if(flag){
+    ctx.font = '32px sans-serif';
+    ctx.fillText(flag, nameX, nameY+4);
+    nameX += 46;
+  }
+  ctx.fillStyle = '#f2ead9';
+  ctx.font = '700 30px "Inter", sans-serif';
+  ctx.fillText(truncate(name.toUpperCase(), 16), nameX, nameY+8);
 
+  ctx.font = '500 16px "Inter", sans-serif';
+  ctx.fillStyle = '#a89ecb';
+  const loc = [city,country].filter(Boolean).join(', ') || 'Chapter Member';
+  ctx.fillText(loc.toUpperCase(), avCX+avR+30 + (flag?46:0), cardY+92);
+
+  // divider line inside card
+  ctx.strokeStyle = 'rgba(201,163,92,.25)';
+  ctx.beginPath(); ctx.moveTo(cardX+40, cardY+150); ctx.lineTo(cardX+cardW-40, cardY+150); ctx.stroke();
+
+  // member id row
+  ctx.fillStyle = '#8a744a';
+  ctx.font = '500 11px "JetBrains Mono", monospace';
+  ctx.fillText('MEMBER ID', cardX+40, cardY+182);
+  ctx.fillStyle = '#f2ead9';
+  ctx.font = '500 15px "JetBrains Mono", monospace';
+  ctx.fillText(genId(name, chapter), cardX+40, cardY+204);
+
+  ctx.fillStyle = '#8a744a';
+  ctx.font = '500 11px "JetBrains Mono", monospace';
+  ctx.fillText('CHAPTER', cardX+280, cardY+182);
+  ctx.fillStyle = '#f2ead9';
+  ctx.font = '500 15px "JetBrains Mono", monospace';
+  ctx.fillText(truncate(chapter,18), cardX+280, cardY+204);
+
+  // status pill
+  ctx.save();
+  const pillY = cardY+cardH-56;
+  roundRect(cardX+40, pillY, 150, 32, 16);
+  ctx.fillStyle = 'rgba(201,163,92,.15)'; ctx.fill();
+  ctx.strokeStyle = '#c9a35c'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle = '#c9a35c';
+  ctx.font = '600 12px "Inter", sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('VERIFIED BUILDER', cardX+115, pillY+21);
+  ctx.restore();
+
+  function roundRect(x,y,w,h,r){
     ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + width - r, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-    ctx.lineTo(x + width, y + height - r);
-    ctx.quadraticCurveTo(
-      x + width,
-      y + height,
-      x + width - r,
-      y + height
-    );
-    ctx.lineTo(x + r, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
     ctx.closePath();
   }
-
-  /*
-   * Utility:
-   * Cover teks bawaan template.
-   *
-   * Kita menggunakan warna yang mirip background template
-   * supaya teks bawaan tidak terlihat.
-   */
-  function coverArea(ctx, x, y, width, height, color) {
-    ctx.save();
-
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, width, height);
-
-    ctx.restore();
+  function truncate(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
+  function genId(n,c){
+    let h=0; const str=n+c;
+    for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+    return 'ARC-' + (h % 90000 + 10000);
   }
-
-  /*
-   * Utility:
-   * Tulis text dengan auto-size.
-   */
-  function drawTextFit(
-    ctx,
-    text,
-    x,
-    y,
-    maxWidth,
-    startSize,
-    options = {}
-  ) {
-    const {
-      bold = false,
-      color = "#f2e2c4",
-      align = "left",
-    } = options;
-
-    const finalText = cleanText(text).toUpperCase();
-
-    const size = fitFont(
-      ctx,
-      finalText,
-      maxWidth,
-      startSize,
-      Math.max(12, startSize - 12)
-    );
-
-    ctx.save();
-
-    ctx.fillStyle = color;
-    ctx.font = `${bold ? "bold " : ""}${size}px Georgia, serif`;
-    ctx.textBaseline = "alphabetic";
-    ctx.textAlign = align;
-
-    ctx.fillText(finalText, x, y);
-
-    ctx.restore();
+  function drawImageCover(img,x,y,w,h){
+    const ir = img.width/img.height, tr = w/h;
+    let sx,sy,sw,sh;
+    if(ir>tr){ sh=img.height; sw=sh*tr; sy=0; sx=(img.width-sw)/2; }
+    else{ sw=img.width; sh=sw/tr; sx=0; sy=(img.height-sh)/2; }
+    ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
   }
-
-  function drawBanner() {
-    const canvas = canvasRef.current;
-
-    if (!canvas || !templateImg) return;
-
-    canvas.width = BASE_W;
-    canvas.height = BASE_H;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.clearRect(0, 0, BASE_W, BASE_H);
-
-    /*
-     * 1. TEMPLATE
-     */
-    ctx.drawImage(
-      templateImg,
-      0,
-      0,
-      BASE_W,
-      BASE_H
-    );
-
-    /*
-     * 2. FOTO PROFIL
-     */
-    if (photoImg) {
-      const { x, y, w, h } = LAYOUT.photo;
-
-      ctx.save();
-
-      /*
-       * Shadow
-       */
-      ctx.shadowColor = "rgba(0,0,0,0.55)";
-      ctx.shadowBlur = 16;
-      ctx.shadowOffsetY = 5;
-
-      /*
-       * Clip kotak foto
-       */
-      ctx.beginPath();
-      ctx.rect(x, y, w, h);
-      ctx.clip();
-
-      drawCoverImage(
-        ctx,
-        photoImg,
-        x,
-        y,
-        w,
-        h
-      );
-
-      ctx.restore();
-
-      /*
-       * Border emas
-       */
-      ctx.save();
-
-      ctx.strokeStyle = "#d8b875";
-      ctx.lineWidth = 3;
-
-      ctx.strokeRect(
-        x + 1.5,
-        y + 1.5,
-        w - 3,
-        h - 3
-      );
-
-      ctx.restore();
-    }
-
-    /*
-     * 3. MEMBERSHIP INFO
-     *
-     * Menyatukan area kanan supaya tidak terlihat
-     * seperti beberapa kotak terpisah.
-     */
-
-    /*
-     * Nama
-     */
-    coverArea(
-      ctx,
-      1398,
-      332,
-      305,
-      34,
-      "#29233f"
-    );
-
-    /*
-     * Kota
-     */
-    coverArea(
-      ctx,
-      1416,
-      382,
-      252,
-      25,
-      "#332a4a"
-    );
-
-    /*
-     * Negara
-     */
-    coverArea(
-      ctx,
-      1416,
-      414,
-      252,
-      25,
-      "#4a3a5a"
-    );
-
-    /*
-     * 4. FLAG
-     */
-    const flagX = LAYOUT.flag.x;
-    const flagY = LAYOUT.flag.y;
-
-    ctx.save();
-
-    /*
-     * Background kecil untuk flag
-     */
-    ctx.fillStyle = "rgba(43,37,64,0.88)";
-
-    roundedRect(
-      ctx,
-      flagX - 4,
-      flagY - 3,
-      40,
-      30,
-      4
-    );
-
-    ctx.fill();
-
-    /*
-     * Flag
-     */
-    ctx.font = "25px sans-serif";
-    ctx.textBaseline = "middle";
-
-    ctx.fillText(
-      flagEmoji(countryCode),
-      flagX,
-      flagY + 11
-    );
-
-    ctx.restore();
-
-    /*
-     * 5. NAME
-     */
-    drawTextFit(
-      ctx,
-      name || "YOUR NAME HERE",
-      LAYOUT.name.x,
-      LAYOUT.name.y,
-      LAYOUT.name.maxWidth,
-      LAYOUT.name.fontSize,
-      {
-        bold: true,
-        color: "#f2e2c4",
-      }
-    );
-
-    /*
-     * 6. CITY
-     */
-    drawTextFit(
-      ctx,
-      city || "YOUR CHAPTER / CITY",
-      LAYOUT.city.x,
-      LAYOUT.city.y,
-      LAYOUT.city.maxWidth,
-      LAYOUT.city.fontSize,
-      {
-        color: "#f2e2c4",
-      }
-    );
-
-    /*
-     * 7. COUNTRY
-     */
-    drawTextFit(
-      ctx,
-      countryName || "YOUR COUNTRY / REGION",
-      LAYOUT.country.x,
-      LAYOUT.country.y,
-      LAYOUT.country.maxWidth,
-      LAYOUT.country.fontSize,
-      {
-        color: "#f2e2c4",
-      }
-    );
-  }
-
-  /*
-   * Upload foto
-   */
-  function handlePhotoUpload(event) {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      alert("File harus berupa gambar.");
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = (event) => {
-      const img = new window.Image();
-
-      img.onload = () => {
-        setPhotoImg(img);
-      };
-
-      img.src = event.target.result;
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  /*
-   * Reset foto
-   */
-  function removePhoto() {
-    setPhotoImg(null);
-
-    const input = document.getElementById("photo-upload");
-
-    if (input) {
-      input.value = "";
-    }
-  }
-
-  /*
-   * Download
-   */
-  function handleDownload() {
-    const canvas = canvasRef.current;
-
-    if (!canvas || !ready) return;
-
-    const safeName =
-      cleanText(name || "member")
-        .replace(/[^a-zA-Z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")
-        .toLowerCase();
-
-    const link = document.createElement("a");
-
-    link.download = `arc-banner-${safeName || "member"}.png`;
-
-    link.href = canvas.toDataURL(
-      "image/png",
-      1
-    );
-
-    link.click();
-  }
-
-  return (
-    <main style={styles.page}>
-      <div style={styles.backgroundGlow} />
-
-      <div style={styles.container}>
-
-        {/* HEADER */}
-        <header style={styles.header}>
-          <div>
-            <div style={styles.logoText}>
-              ARC
-            </div>
-
-            <h1 style={styles.h1}>
-              Community Banner Maker
-            </h1>
-
-            <p style={styles.sub}>
-              Buat banner Arc kamu sendiri dengan
-              nama, foto, chapter, dan negara.
-            </p>
-          </div>
-
-          <div style={styles.badge}>
-            ARC COMMUNITY
-          </div>
-        </header>
-
-        {/* PREVIEW */}
-        <section style={styles.card}>
-          <div style={styles.cardHeader}>
-            <div>
-              <h2 style={styles.cardTitle}>
-                Live Preview
-              </h2>
-
-              <p style={styles.cardSub}>
-                Perubahan akan langsung muncul di banner.
-              </p>
-            </div>
-
-            <span style={styles.status}>
-              ● LIVE
-            </span>
-          </div>
-
-          <div style={styles.previewOuter}>
-            {!ready && (
-              <div style={styles.loading}>
-                <div style={styles.spinner} />
-                Memuat template…
-              </div>
-            )}
-
-            <canvas
-              ref={canvasRef}
-              style={{
-                ...styles.canvas,
-                opacity: ready ? 1 : 0,
-              }}
-            />
-          </div>
-
-          <div style={styles.resolution}>
-            1824 × 592 px • PNG
-          </div>
-        </section>
-
-        {/* FORM */}
-        <section style={styles.card}>
-          <div style={styles.cardHeader}>
-            <div>
-              <h2 style={styles.cardTitle}>
-                Customize Your Banner
-              </h2>
-
-              <p style={styles.cardSub}>
-                Isi informasi kamu di bawah.
-              </p>
-            </div>
-          </div>
-
-          <div style={styles.formGrid}>
-
-            {/* FOTO */}
-            <div style={styles.field}>
-              <label style={styles.label}>
-                Foto Profil
-              </label>
-
-              <div style={styles.uploadBox}>
-                {photoImg ? (
-                  <div style={styles.photoPreview}>
-                    <img
-                      src={photoImg.src}
-                      alt="Preview"
-                      style={styles.photoPreviewImg}
-                    />
-
-                    <div style={styles.photoActions}>
-                      <label
-                        htmlFor="photo-upload"
-                        style={styles.changePhoto}
-                      >
-                        Ganti
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={removePhoto}
-                        style={styles.removeButton}
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label
-                    htmlFor="photo-upload"
-                    style={styles.uploadLabel}
-                  >
-                    <span style={styles.uploadIcon}>
-                      +
-                    </span>
-
-                    <span style={styles.uploadTitle}>
-                      Upload Foto
-                    </span>
-
-                    <span style={styles.uploadSub}>
-                      JPG, PNG atau WEBP
-                    </span>
-                  </label>
-                )}
-
-                <input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={handlePhotoUpload}
-                  style={styles.hiddenInput}
-                />
-              </div>
-            </div>
-
-            {/* NAME */}
-            <div style={styles.field}>
-              <label style={styles.label}>
-                Nama
-              </label>
-
-              <input
-                type="text"
-                value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
-                placeholder="Contoh: CHIMIL"
-                maxLength={30}
-                style={styles.input}
-              />
-
-              <span style={styles.helper}>
-                Maksimal 30 karakter
-              </span>
-            </div>
-
-            {/* CITY */}
-            <div style={styles.field}>
-              <label style={styles.label}>
-                Chapter / Kota
-              </label>
-
-              <input
-                type="text"
-                value={city}
-                onChange={(e) =>
-                  setCity(e.target.value)
-                }
-                placeholder="Contoh: Jakarta"
-                maxLength={30}
-                style={styles.input}
-              />
-
-              <span style={styles.helper}>
-                Kota atau nama chapter kamu
-              </span>
-            </div>
-
-            {/* COUNTRY */}
-            <div style={styles.field}>
-              <label style={styles.label}>
-                Negara / Region
-              </label>
-
-              <div style={styles.selectWrap}>
-                <span style={styles.selectFlag}>
-                  {flagEmoji(countryCode)}
-                </span>
-
-                <select
-                  value={countryCode}
-                  onChange={(e) =>
-                    setCountryCode(e.target.value)
-                  }
-                  style={styles.select}
-                >
-                  {COUNTRIES.map(
-                    ([country, code]) => (
-                      <option
-                        key={code}
-                        value={code}
-                      >
-                        {country}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-              <span style={styles.helper}>
-                Flag akan otomatis berubah.
-              </span>
-            </div>
-
-          </div>
-
-          {/* DOWNLOAD */}
-          <div style={styles.downloadArea}>
-            <button
-              type="button"
-              onClick={handleDownload}
-              disabled={!ready}
-              style={{
-                ...styles.downloadButton,
-                opacity: ready ? 1 : 0.5,
-                cursor: ready
-                  ? "pointer"
-                  : "not-allowed",
-              }}
-            >
-              <span>
-                ↓
-              </span>
-
-              Unduh Banner PNG
-            </button>
-          </div>
-        </section>
-
-        {/* FOOTER */}
-        <footer style={styles.footer}>
-          <span>
-            Built for the Arc Community
-          </span>
-
-          <span>
-            •
-          </span>
-
-          <span>
-            Architects · Builders · Community · Impact
-          </span>
-        </footer>
-
-      </div>
-    </main>
-  );
 }
 
-const styles = {
-  page: {
-    minHeight: "100vh",
-    position: "relative",
-    overflow: "hidden",
-    background:
-      "radial-gradient(circle at top, #282044 0%, #120d22 42%, #090712 100%)",
-    color: "#f2e2c4",
-    fontFamily:
-      "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    padding: "32px 16px 70px",
-  },
+document.querySelectorAll('#fName,#fCity,#fCountry,#fChapter,#fFlag').forEach(el=>{
+  el.addEventListener('input', () => { try{drawCard();}catch(e){} });
+  el.addEventListener('change', () => { try{drawCard();}catch(e){} });
+});
 
-  backgroundGlow: {
-    position: "fixed",
-    width: 500,
-    height: 500,
-    top: -250,
-    left: "50%",
-    transform: "translateX(-50%)",
-    background:
-      "radial-gradient(circle, rgba(124,92,255,0.18), transparent 68%)",
-    pointerEvents: "none",
-  },
+document.getElementById('fPhoto').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      photoImg = img;
+      const drop = document.getElementById('photoDrop');
+      drop.classList.add('has-img');
+      drop.innerHTML = `<img src="${ev.target.result}" alt="preview"><input type="file" id="fPhoto2" style="display:none">`;
+      drawCard();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
 
-  container: {
-    width: "100%",
-    maxWidth: 1100,
-    margin: "0 auto",
-    position: "relative",
-  },
+document.getElementById('resetPhotoBtn').addEventListener('click', function(){
+  photoImg = null;
+  const drop = document.getElementById('photoDrop');
+  drop.classList.remove('has-img');
+  drop.innerHTML = `<span id="photoDropText">Klik atau tarik foto ke sini</span><input type="file" id="fPhoto" accept="image/*">`;
+  document.getElementById('fPhoto').addEventListener('change', arguments.callee.caller);
+  drawCard();
+});
 
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 20,
-    marginBottom: 24,
-  },
+document.getElementById('downloadBtn').addEventListener('click', function(){
+  const link = document.createElement('a');
+  const name = (document.getElementById('fName').value.trim() || 'member').replace(/\s+/g,'-').toLowerCase();
+  link.download = `arc-member-${name}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
 
-  logoText: {
-    display: "inline-block",
-    fontSize: 13,
-    fontWeight: 800,
-    letterSpacing: 4,
-    color: "#c8a6ff",
-    marginBottom: 5,
-  },
-
-  h1: {
-    margin: 0,
-    fontSize: "clamp(25px, 4vw, 38px)",
-    lineHeight: 1.1,
-    letterSpacing: "-0.8px",
-  },
-
-  sub: {
-    margin: "9px 0 0",
-    color: "rgba(242,226,196,0.62)",
-    fontSize: 14,
-    lineHeight: 1.6,
-    maxWidth: 550,
-  },
-
-  badge: {
-    padding: "9px 13px",
-    borderRadius: 999,
-    border:
-      "1px solid rgba(216,184,117,0.28)",
-    background:
-      "rgba(216,184,117,0.07)",
-    color: "#d8b875",
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: 1.4,
-    whiteSpace: "nowrap",
-  },
-
-  card: {
-    background:
-      "linear-gradient(145deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025))",
-    border:
-      "1px solid rgba(255,255,255,0.10)",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 18,
-    boxShadow:
-      "0 20px 60px rgba(0,0,0,0.28)",
-    backdropFilter: "blur(12px
+// wait for fonts before first draw
+document.fonts.ready.then(drawCard);
+setTimeout(drawCard, 300);
+</script>
+</body>
+</html>
